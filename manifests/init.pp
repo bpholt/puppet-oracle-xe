@@ -2,6 +2,10 @@ class oracle-xe {
 
   $oracle_rpm = "oracle-xe-11.2.0-1.0.x86_64.rpm"
   $oracle_rpm_tmp = "/tmp/$oracle_rpm"
+  $http_port = 8080
+  $listener_port = 1521
+  $password = 'password'
+  $startup = 'y'
 
   file { 'oracle-xe-rpm':
     path   => "$oracle_rpm_tmp",
@@ -13,17 +17,14 @@ class oracle-xe {
   }
 
   package { 'oracle-xe':
-    ensure => present,
-    source => "$oracle_rpm_tmp",
+    ensure   => present,
+    source   => "$oracle_rpm_tmp",
+    provider => 'rpm',
   }
 
-  file { 'oracle-xe-conf':
-    path   => '/etc/sysconfig/oracle-xe',
-    ensure => file,
-    source => 'puppet:///modules/oracle-xe/oracle-xe.conf',
-    mode   => 0444,
-    owner  => root,
-    group  => root,
+  exec { 'oracle-xe-conf':
+    creates => '/etc/sysconfig/oracle-xe',
+    command => "/usr/bin/printf \"$http_port\\n$listener_port\\n$password\\n$password\\n$startup\\n\" | /etc/init.d/oracle-xe configure",
   }
 
   service { 'oracle-xe':
@@ -33,8 +34,19 @@ class oracle-xe {
     hasstatus  => true,
   }
 
-  File['oracle-xe-rpm'] -> Package['oracle-xe']
-  Package['oracle-xe'] -> File['oracle-xe-conf']
-  File['oracle-xe-conf'] -> Service['oracle-xe']
-}
+  firewall { '999 oracle-listener':
+    action => 'accept',
+    port   => "$listener_port",
+  }
 
+  firewall { '999 oracle-http':
+    action => 'accept',
+    port   => "$http_port",
+  }
+
+  File['oracle-xe-rpm'] -> Package['oracle-xe']
+  Package['oracle-xe'] -> Exec['oracle-xe-conf']
+  Exec['oracle-xe-conf'] -> Service['oracle-xe']
+  Service['oracle-xe'] -> Firewall['999 oracle-listener']
+  Service['oracle-xe'] -> Firewall['999 oracle-http']
+}
