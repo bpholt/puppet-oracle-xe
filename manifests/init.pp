@@ -34,19 +34,14 @@ class oracle-xe {
     hasstatus  => true,
   }
 
-  firewall { '999 oracle-listener':
+  firewall { '100 oracle':
     action => 'accept',
-    port   => "$listener_port",
-  }
-
-  firewall { '999 oracle-http':
-    action => 'accept',
-    port   => "$http_port",
+    dport  => ["$listener_port", "$http_port"],
+    proto  => 'tcp',
   }
 
   File['oracle-xe-rpm'] -> Package['oracle-xe']
   Package['oracle-xe'] -> Exec['oracle-xe-conf']
   Exec['oracle-xe-conf'] -> Service['oracle-xe']
-  Service['oracle-xe'] -> Firewall['999 oracle-listener']
-  Service['oracle-xe'] -> Firewall['999 oracle-http']
+  Service['oracle-xe'] -> Firewall['100 oracle']
 }
