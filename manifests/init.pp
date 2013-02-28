@@ -1,11 +1,13 @@
-class oracle-xe {
+class oracle-xe (
+  $http_port = 8080,
+  $listener_port = 1521,
+  $ipv6 = false,
+  $startup = 'y',
+  $password,
+) {
 
   $oracle_rpm = "oracle-xe-11.2.0-1.0.x86_64.rpm"
   $oracle_rpm_tmp = "/tmp/$oracle_rpm"
-  $http_port = 8080
-  $listener_port = 1521
-  $password = 'password'
-  $startup = 'y'
 
   file { 'oracle-xe-rpm':
     path   => "$oracle_rpm_tmp",
@@ -38,6 +40,10 @@ class oracle-xe {
     action => 'accept',
     dport  => ["$listener_port", "$http_port"],
     proto  => 'tcp',
+    provider => $ipv6 ? {
+      true   => 'ip6tables',
+      false  => 'iptables',
+    }
   }
 
   File['oracle-xe-rpm'] -> Package['oracle-xe']
