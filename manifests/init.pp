@@ -9,6 +9,7 @@ class oracle-xe (
 
   $oracle_rpm = "oracle-xe-11.2.0-1.0.x86_64.rpm"
   $oracle_rpm_tmp = "/tmp/$oracle_rpm"
+  $oracle_swap_script = "/u01/app/oracle/local/swap.sh"
 
   file { 'oracle-xe-rpm':
     path   => "$oracle_rpm_tmp",
@@ -17,6 +18,27 @@ class oracle-xe (
     mode   => 0444,
     owner  => root,
     group  => root,
+  }
+
+  file { 'oracle-local':
+    ensure => directory,
+    path   => [ '/u01', '/u01/app', '/u01/app/oracle', '/u01/app/oracle/local'],
+    before => File['oracle-swap'],
+  }
+
+  file { 'oracle-swap':
+    path   => "$oracle_swap_script",
+    ensure => file,
+    source => "puppet:///modules/oracle-xe/swap.sh",
+    mode   => 0544,
+    owner  => root,
+    group  => root,
+    before => Exec['oracle-swap'],
+  }
+
+  exec { 'oracle-swap':
+    command => "$oracle_swap_script",
+    before  => Package['oracle-xe'],
   }
 
   # only necessary because we don't use yum to install the main package
