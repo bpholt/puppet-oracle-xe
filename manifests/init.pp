@@ -20,9 +20,8 @@ class oracle-xe (
     group  => root,
   }
 
-  file { 'oracle-local':
+  file { [ '/u01', '/u01/app', '/u01/app/oracle', '/u01/app/oracle/local']:
     ensure => directory,
-    path   => [ '/u01', '/u01/app', '/u01/app/oracle', '/u01/app/oracle/local'],
     before => File['oracle-swap'],
   }
 
