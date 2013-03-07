@@ -18,6 +18,12 @@ class oracle-xe (
     group  => root,
   }
 
+  # only necessary because we don't use yum to install the main package
+  package { 'libaio': 
+    ensure => 'latest',
+    before => Package['oracle-xe'],
+  }
+
   package { 'oracle-xe':
     ensure   => present,
     source   => "$oracle_rpm_tmp",
@@ -37,9 +43,9 @@ class oracle-xe (
   }
 
   firewall { '100 oracle':
-    action => 'accept',
-    dport  => ["$listener_port", "$http_port"],
-    proto  => 'tcp',
+    action   => 'accept',
+    dport    => ["$listener_port", "$http_port"],
+    proto    => 'tcp',
     provider => $ipv6 ? {
       true   => 'ip6tables',
       false  => 'iptables',
