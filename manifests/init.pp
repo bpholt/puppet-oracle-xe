@@ -21,8 +21,9 @@ class oracle-xe (
   }
 
   file { [ '/u01', '/u01/app', '/u01/app/oracle', '/u01/app/oracle/local']:
-    ensure => directory,
-    before => File['oracle-swap'],
+    ensure      => directory,
+    before      => File['oracle-swap'],
+    refreshonly => true,
   }
 
   file { 'oracle-swap':
@@ -35,6 +36,7 @@ class oracle-xe (
     before => Exec['oracle-swap'],
   }
 
+  # Swap must exceed Oracle's minimum when installed
   exec { 'oracle-swap':
     command => "$oracle_swap_script",
     before  => Package['oracle-xe'],
